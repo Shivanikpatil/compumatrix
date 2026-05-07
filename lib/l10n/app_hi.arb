@@ -1,0 +1,20 @@
+{
+  "login": "लॉगिन",
+  "mobileNumber": "मोबाइल नंबर",
+  "sendOtp": "ओटीपी भेजें",
+  "verifyOtp": "ओटीपी सत्यापित करें",
+  "enterOtp": "ओटीपी दर्ज करें",
+  "resendOtp": "ओटीपी पुन: भेजें",
+  "home": "होम",
+  "activeServices": "सक्रिय सेवाएं",
+  "vehicles": "वाहन",
+  "addVehicle": "वाहन जोड़ें",
+  "vehicleName": "वाहन का नाम",
+  "registrationNumber": "पंजीकरण संख्या",
+  "vehicleType": "वाहन का प्रकार",
+  "delete": "हटाएं",
+  "confirmDelete": "क्या आप वाकई इस वाहन को हटाना चाहते हैं?",
+  "cancel": "रद्द करें",
+  "success": "सफलता",
+  "error": "त्रुटि"
+}
