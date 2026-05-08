@@ -1,4 +1,5 @@
 // lib/presentation/screens/splash/splash_screen.dart
+import 'package:compumatrix/generated/assets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -34,7 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Image.asset('assets/images/logo.png', width: 120, height: 120),
+        child: Image.asset(Assets.images.image3.path, width: 120, height: 120),
       ),
     );
   }
