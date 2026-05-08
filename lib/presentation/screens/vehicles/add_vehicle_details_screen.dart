@@ -62,7 +62,7 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
             // Four Wheeler Card
             VehicleTypeCard(
               title: "Four Wheeler",
-              imagePath: Assets.images.car.path, // Replace with your actual car asset
+              imagePath: Assets.images.img3.path, // Replace with your actual car asset
               isSelected: selectedType == "four",
               onTap: () => setState(() => selectedType = "four"),
             ),
@@ -72,7 +72,7 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
             // Two Wheeler Card
             VehicleTypeCard(
               title: "Two Wheeler",
-              imagePath: Assets.images.car.path, // Replace with your actual scooter asset
+              imagePath: Assets.images.img.path, // Replace with your actual scooter asset
               isSelected: selectedType == "two",
               onTap: () => setState(() => selectedType = "two"),
             ),
@@ -82,29 +82,63 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
             // Continue Button
             Padding(
               padding: const EdgeInsets.only(bottom: 30),
-              child: SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pushNamed(context, '/add-vehicle'),
+              child: Column(
+                children: [
+                  // ✅ Show inline error if nothing selected
+                  if (selectedType == null)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 15, color: Colors.red),
+                          SizedBox(width: 6),
+                          Text(
+                            'Please select a vehicle type to continue.',
+                            style: TextStyle(color: Colors.red, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
 
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1D4ED8), // Pure Blue
-                    disabledBackgroundColor: const Color(0xFF1D4ED8).withOpacity(0.5),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      // ✅ Block navigation if nothing selected
+                      onPressed: () {
+                        if (selectedType == null) {
+                          setState(() {}); // triggers the error message above
+                          return;
+                        }
+                        // ✅ Map local key → API value and pass it forward
+                        final apiType = selectedType == 'four'
+                            ? 'four_wheeler'
+                            : 'two_wheeler';
+
+                        Navigator.pushNamed(
+                          context,
+                          '/add-vehicle',
+                          arguments: apiType, // 👈 pass to next screen
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1D4ED8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                    elevation: 0,
                   ),
-                  child: const Text(
-                    "Continue",
-                    style: TextStyle(
-                        fontSize: 16,
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold
-                    ),
-                  ),
-                ),
+                ],
               ),
             ),
           ],

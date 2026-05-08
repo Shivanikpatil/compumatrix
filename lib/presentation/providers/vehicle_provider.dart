@@ -10,7 +10,10 @@ class VehicleProvider extends ChangeNotifier {
   List<VehicleModel> vehicles = [];
   bool isLoading = false;
   String? errorMessage;
-
+  void setSelectedVehicleType(String type) {
+    selectedVehicleType = type;
+    notifyListeners();
+  }
   // Add vehicle form state
   String? selectedVehicleType;  // "two_wheeler" or "four_wheeler"
   File? selectedImage;
@@ -32,13 +35,28 @@ class VehicleProvider extends ChangeNotifier {
   }
 
   Future<bool> addVehicle() async {
-    if (selectedVehicleType == null || selectedImage == null || regNo.isEmpty) {
-      errorMessage = 'Please fill all required fields and add an image.';
+    // ── Validation
+    if (selectedVehicleType == null) {
+      errorMessage = 'Please select a vehicle type.';
       notifyListeners();
       return false;
     }
+    if (selectedImage == null) {
+      errorMessage = 'Please add a vehicle image.';
+      notifyListeners();
+      return false;
+    }
+    if (regNo.trim().isEmpty) {
+      errorMessage = 'Registration number is required.';
+      notifyListeners();
+      return false;
+    }
+
+    // ── API call
+    errorMessage = null;        // clear any previous error
     isLoading = true;
     notifyListeners();
+
     try {
       await _dataSource.addVehicle(
         vehicleName: vehicleName,
@@ -50,13 +68,15 @@ class VehicleProvider extends ChangeNotifier {
       _resetForm();
       return true;
     } catch (e) {
-      errorMessage = 'Failed to add vehicle. Please try again.';
+      // Show the real message thrown from the data source
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      return false;
+    } finally {
+      // ✅ Always reset loading — was missing on success path
       isLoading = false;
       notifyListeners();
-      return false;
     }
   }
-
   Future<void> deleteVehicle(String vehicleId) async {
     try {
       await _dataSource.deleteVehicle(vehicleId);

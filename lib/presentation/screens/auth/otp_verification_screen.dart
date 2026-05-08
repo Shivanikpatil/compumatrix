@@ -111,58 +111,60 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
           // --- Input Section ---
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Column(
-                children: [
-                  const SizedBox(height: 48),
-                  // OTP Boxes
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: List.generate(4, (index) => _buildOtpBox(index)),
-                  ),
-                  const SizedBox(height: 32),
-                  // Resend Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      GestureDetector(
-                        onTap: _secondsRemaining == 0 ? () => _startTimer() : null,
-                        child: Text(
-                          'Send code again',
-                          style: TextStyle(
-                            color: const Color(0xFF1D4ED8),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                            decoration: _secondsRemaining == 0 ? TextDecoration.underline : null,
+            child: SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 48),
+                    // OTP Boxes
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(4, (index) => _buildOtpBox(index)),
+                    ),
+                    const SizedBox(height: 32),
+                    // Resend Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _secondsRemaining == 0 ? () => _startTimer() : null,
+                          child: Text(
+                            'Send code again',
+                            style: TextStyle(
+                              color: const Color(0xFF1D4ED8),
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              decoration: _secondsRemaining == 0 ? TextDecoration.underline : null,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '00:${_secondsRemaining.toString().padLeft(2, '0')}',
-                        style: const TextStyle(fontSize: 16, color: Colors.black87),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 48),
-                  // Enter Button
-                  ElevatedButton(
-                    onPressed: auth.isLoading ? null : _verifyOtp,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D4ED8),
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
+                        const SizedBox(width: 8),
+                        Text(
+                          '00:${_secondsRemaining.toString().padLeft(2, '0')}',
+                          style: const TextStyle(fontSize: 16, color: Colors.black87),
+                        ),
+                      ],
                     ),
-                    child: auth.isLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                        : const Text(
-                      'Enter OTP',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    const SizedBox(height: 48),
+                    // Enter Button
+                    ElevatedButton(
+                      onPressed: auth.isLoading ? null : _verifyOtp,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1D4ED8),
+                        minimumSize: const Size(double.infinity, 56),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: auth.isLoading
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text(
+                        'Enter OTP',
+                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

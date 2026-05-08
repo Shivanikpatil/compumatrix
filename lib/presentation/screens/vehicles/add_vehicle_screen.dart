@@ -18,7 +18,17 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _regController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // ✅ Receive the vehicle type passed from the previous screen
+      final vehicleType = ModalRoute.of(context)?.settings.arguments as String?;
+      if (vehicleType != null) {
+        context.read<VehicleProvider>().setSelectedVehicleType(vehicleType);
+      }
+    });
+  }
   @override
   void dispose() {
     _nameController.dispose();
@@ -39,11 +49,32 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
     provider.setRegNo(_regController.text.trim().toUpperCase());
 
     final success = await provider.addVehicle();
-    if (success && mounted) {
+
+    if (!mounted) return;
+
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Vehicle added successfully!'),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       Navigator.pop(context);
+    } else {
+      // Provider already set errorMessage — show it
+      final msg = context
+          .read<VehicleProvider>()
+          .errorMessage ?? 'Something went wrong.';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<VehicleProvider>();
@@ -138,23 +169,48 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
           ),
 
           // Bottom Save Button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
-            child: ElevatedButton(
-              onPressed: provider.isLoading ? null : _saveVehicle,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1D4ED8),
-                minimumSize: const Size(double.infinity, 56),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                elevation: 0,
+          Column(
+            children: [
+              // Inline error message — visible before the user taps Save
+              if (provider.errorMessage != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline, color: Colors.red, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          provider.errorMessage!,
+                          style: const TextStyle(color: Colors.red, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 32),
+                child: ElevatedButton(
+                  onPressed: provider.isLoading ? null : _saveVehicle,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF1D4ED8),
+                    minimumSize: const Size(double.infinity, 56),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  child: provider.isLoading
+                      ? const SizedBox(
+                    width: 24, height: 24,
+                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                  )
+                      : const Text(
+                    'Save Vehicle',
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  ),
+                ),
               ),
-              child: provider.isLoading
-                  ? const CircularProgressIndicator(color: Colors.white)
-                  : const Text(
-                'Save Vehicle',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-              ),
-            ),
+            ],
           ),
         ],
       ),

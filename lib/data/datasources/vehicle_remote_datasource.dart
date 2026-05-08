@@ -15,23 +15,28 @@ class VehicleRemoteDataSource {
     return data.map((e) => VehicleModel.fromJson(e)).toList();
   }
 
-  /// POST /consumer-auth/  → multipart form with image + fields
   Future<void> addVehicle({
     required String vehicleName,
     required String regNo,
-    required String vehicleType,  // must be "two_wheeler" or "four_wheeler"
+    required String vehicleType,
     required File imageFile,
   }) async {
-    final formData = FormData.fromMap({
-      'vehicle_name': vehicleName,
-      'reg_no': regNo,
-      'vehicle_type': vehicleType,
-      'vehicle_image': await MultipartFile.fromFile(
-        imageFile.path,
-        filename: imageFile.path.split('/').last,
-      ),
-    });
-    await _dio.post(ApiConstants.vehicles, data: formData);
+    try {
+      final formData = FormData.fromMap({
+        'vehicle_name': vehicleName,
+        'reg_no': regNo,
+        'vehicle_type': vehicleType,
+        'vehicle_image': await MultipartFile.fromFile(
+          imageFile.path,
+          filename: imageFile.path.split('/').last,
+        ),
+      });
+      await _dio.post(ApiConstants.vehicles, data: formData);
+    } on DioException catch (e) {
+      // Pull the server's message if available, else use a fallback
+      final serverMsg = e.response?.data?['message'] as String?;
+      throw Exception(serverMsg ?? 'Server error: ${e.response?.statusCode}');
+    }
   }
 
   /// DELETE /consumer-auth/{id}
