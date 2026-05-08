@@ -122,7 +122,8 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
       child: ElevatedButton(
-        onPressed: () => Navigator.pushNamed(context, '/add-vehicle'),
+        onPressed: () => Navigator.pushNamed(context, '/newVehicle'),
+        // onPressed: () => Navigator.pushNamed(context, '/add-vehicle'),
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF1D4ED8), // Vibrant blue
           minimumSize: const Size(double.infinity, 56),

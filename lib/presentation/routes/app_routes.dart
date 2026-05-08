@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/vehicles/add_vehicle_details_screen.dart';
 import '../screens/vehicles/add_vehicle_screen.dart';
 import '../screens/vehicles/vehicle_list_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
@@ -18,6 +19,7 @@ class AppRoutes {
   static const String vehicles = '/vehicles';
   static const String addVehicle = '/add-vehicle';
   static const String profile = '/profile';
+  static const String newVehicle = '/newVehicle';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashScreen(),
@@ -28,5 +30,6 @@ class AppRoutes {
     vehicles: (context) => const MyVehiclesScreen(),
     addVehicle: (context) => const AddVehicleScreen(),
     profile: (context) => const ProfileScreen(),
+    newVehicle: (context) => const AddNewVehicleScreen(),
   };
 }

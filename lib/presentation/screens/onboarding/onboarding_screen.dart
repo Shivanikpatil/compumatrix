@@ -1,5 +1,7 @@
-// lib/presentation/screens/onboarding/onboarding_screen.dart
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../generated/assets.dart';
+import '../auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -9,146 +11,127 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final PageController _controller = PageController();
+  final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<_OnboardingData> _pages = const [
-    _OnboardingData(
-      image: 'assets/images/car_wash.png',
-      title: 'Professional Cleaning, Simplified',
-      titleHighlight: 'Professional',
+  // ─── PRIMARY BRAND COLORS ────────────────────────────────────────────────
+  static const Color kBlue   = Color(0xFF0055FF);
+  static const Color kYellow = Color(0xFFFFD600);
+
+  // ─── ONBOARDING DATA ─────────────────────────────────────────────────────
+  // Replace imagePath values with your actual asset paths, e.g.
+  //   'assets/images/onboarding_1.png'
+  final List<OnboardingData> _pages = [
+    OnboardingData(
+      highlightedTitle: 'Professional',
+      restTitle: '\nCleaning, Simplified',
       description:
-      'Book vehicle and professional cleaning services managed end-to-end by a verified system no guesswork, no compromises.',
+      'Book vehicle and professional cleaning services managed end-to-end '
+          'by a verified system — no guesswork, no compromises.',
+      imagePath: Assets.images.img1.path, // 🔁 replace with your image
     ),
-    _OnboardingData(
-      image: 'assets/images/live_tracking.png',
-      title: 'Live Tracking & Transparency',
-      titleHighlight: 'Live Tracking',
+    OnboardingData(
+      highlightedTitle: 'Live Tracking',
+      restTitle: ' &\nTransparency',
       description:
-      'From booking to completion, track your service in real time and view verified before-and-after proof.',
+      'From booking to completion, track your service in real time and '
+          'view verified before-and-after proof.',
+      imagePath: Assets.images.img2.path, // 🔁 replace with your image
     ),
-    _OnboardingData(
-      image: 'assets/images/Quality You Can Trust and Validate',
-      titleHighlight: 'Quality',
+    OnboardingData(
+      highlightedTitle: 'Quality',
+      restTitle: ' You Can Trust\nand Validate',
       description:
-      'Every job is assigned, monitored, and validated by an admin-controlled system to ensure quality and reliable service.', title: '',
+      'Every job is assigned, monitored, and validated by an admin-controlled '
+          'system to ensure quality and reliable service.',
+      imagePath: Assets.images.img1.path, // 🔁 replace with your image
     ),
   ];
 
-  void _next() {
-    if (_currentPage < _pages.length - 1) {
-      _controller.nextPage(
-          duration: const Duration(milliseconds: 400), curve: Curves.easeInOut);
-    } else {
-      Navigator.pushReplacementNamed(context, '/login');
-    }
-  }
-
+  // ─── BUILD ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF1D4ED8), // Brand Blue
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background UI / Image Area
+          // ── Swipeable pages
           PageView.builder(
-            controller: _controller,
-            onPageChanged: (i) => setState(() => _currentPage = i),
+            controller: _pageController,
+            onPageChanged: (page) => setState(() => _currentPage = page),
             itemCount: _pages.length,
-            itemBuilder: (_, i) => _OnboardingHeader(data: _pages[i]),
+            itemBuilder: (ctx, i) => _buildPage(_pages[i]),
           ),
 
-          // Skip Button
+          // ── Skip button (top-right)
           Positioned(
-            top: 60,
+            top: MediaQuery.of(context).padding.top + 12,
             right: 20,
             child: TextButton(
-              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-              child: const Text(
-                'Skip',
-                style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+              onPressed: _completeOnboarding,
+              style: TextButton.styleFrom(
+                foregroundColor: Colors.white,
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
+              child: const Text('Skip'),
             ),
           ),
 
-          // Bottom Content Card (The White Area)
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Container(
-              height: MediaQuery.of(context).size.height * 0.42,
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title with highlights
-                  RichText(
-                    text: TextSpan(
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF0F172A),
-                        height: 1.2,
-                      ),
-                      children: _buildTitleSpans(_pages[_currentPage]),
-                    ),
+          // ── Bottom controls (dots + button)
+          Positioned(
+            bottom: MediaQuery.of(context).padding.bottom + 28,
+            left: 24,
+            right: 24,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Dots
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(
+                    _pages.length,
+                        (i) => _buildDot(i),
                   ),
-                  const SizedBox(height: 16),
-                  // Description
-                  Text(
-                    _pages[_currentPage].description,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                      height: 1.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  // Dot Indicators
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(_pages.length, (i) {
-                      return AnimatedContainer(
-                        duration: const Duration(milliseconds: 300),
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: _currentPage == i ? 12 : 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(4),
-                          color: _currentPage == i
-                              ? const Color(0xFFFFD700) // Gold/Yellow
-                              : Colors.grey.shade300,
-                        ),
-                      );
-                    }),
-                  ),
-                  const SizedBox(height: 32),
-                  // Button
-                  ElevatedButton(
-                    onPressed: _next,
+                ),
+                const SizedBox(height: 28),
+
+                // Next / Get Started button
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_currentPage == _pages.length - 1) {
+                        _completeOnboarding();
+                      } else {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 350),
+                          curve: Curves.easeInOut,
+                        );
+                      }
+                    },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1D4ED8),
-                      minimumSize: const Size(double.infinity, 56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
+                      backgroundColor: kBlue,
                       elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
                     ),
                     child: Text(
                       _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
                       style: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 17,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        letterSpacing: 0.3,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],
@@ -156,53 +139,209 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  List<TextSpan> _buildTitleSpans(_OnboardingData data) {
-    final title = data.title;
-    final highlight = data.titleHighlight;
-    final idx = title.indexOf(highlight);
+  // ─── SINGLE PAGE ──────────────────────────────────────────────────────────
+  Widget _buildPage(OnboardingData data) {
+    return Column(
+      children: [
+        // ── Top illustration area (blue with blob bottom)
+        Expanded(
+          flex: 58,
+          child: ClipPath(
+            clipper: _BlobClipper(),
+            child: Container(
+              width: double.infinity,
+              color: kBlue,
+              child: Padding(
+                // Push image away from the status bar
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + 60,
+                  bottom: 40,
+                ),
+                child: _OnboardingImage(path: data.imagePath),
+              ),
+            ),
+          ),
+        ),
 
-    if (idx == -1) return [TextSpan(text: title)];
+        // ── Bottom text area
+        Expanded(
+          flex: 42,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 28),
 
-    return [
-      TextSpan(
-        text: title.substring(0, idx + highlight.length),
-        style: const TextStyle(color: Color(0xFF1D4ED8)),
+                // Mixed-colour title
+                RichText(
+                  text: TextSpan(
+                    style: const TextStyle(
+                      fontSize: 26,
+                      fontWeight: FontWeight.bold,
+                      height: 1.25,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: data.highlightedTitle,
+                        style: const TextStyle(color: kBlue),
+                      ),
+                      TextSpan(
+                        text: data.restTitle,
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 14),
+
+                // Description
+                Text(
+                  data.description,
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    color: Colors.grey[500],
+                    height: 1.6,
+                  ),
+                ),
+
+                // Spacer so button sits at bottom
+                const Spacer(),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ─── INDICATOR DOT ────────────────────────────────────────────────────────
+  Widget _buildDot(int index) {
+    final bool isActive = index == _currentPage;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
+      height: 8,
+      width: isActive ? 24 : 8,
+      margin: const EdgeInsets.only(right: 6),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        color: isActive ? kYellow : Colors.grey[300],
       ),
-      TextSpan(text: title.substring(idx + highlight.length)),
-    ];
+    );
+  }
+
+  // ─── NAVIGATION ───────────────────────────────────────────────────────────
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isFirstTime', false);
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    }
   }
 }
 
-class _OnboardingHeader extends StatelessWidget {
-  final _OnboardingData data;
-  const _OnboardingHeader({required this.data});
+// ─── BLOB CLIPPER ─────────────────────────────────────────────────────────────
+// Creates the organic curved bottom edge on the blue illustration area.
+class _BlobClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height - 60);
+
+    // Left curve dipping down then rising
+    path.quadraticBezierTo(
+      size.width * 0.15,
+      size.height + 20,
+      size.width * 0.5,
+      size.height - 20,
+    );
+
+    // Right curve rising back up
+    path.quadraticBezierTo(
+      size.width * 0.85,
+      size.height - 70,
+      size.width,
+      size.height - 10,
+    );
+
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+
+  @override
+  bool shouldReclip(_BlobClipper _) => false;
+}
+
+// ─── ILLUSTRATION WIDGET ──────────────────────────────────────────────────────
+// Shows your asset image; falls back to a placeholder icon while not yet set.
+class _OnboardingImage extends StatelessWidget {
+  const _OnboardingImage({required this.path});
+  final String path;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      alignment: Alignment.topCenter,
-      padding: const EdgeInsets.only(top: 100),
-      child: Image.asset(
-        data.image,
-        height: MediaQuery.of(context).size.height * 0.35,
-        fit: BoxFit.contain,
-        errorBuilder: (_, __, ___) => const Icon(
-          Icons.image_outlined,
-          size: 200,
-          color: Colors.white24,
-        ),
-      ),
+    // Once you've added real assets, replace the body with just:
+    //   return Image.asset(path, fit: BoxFit.contain);
+    return Image.asset(
+      path,
+      fit: BoxFit.contain,
+      errorBuilder: (_, __, ___) => const _PlaceholderIllustration(),
     );
   }
 }
 
-class _OnboardingData {
-  final String image, title, titleHighlight, description;
-  const _OnboardingData({
-    required this.image,
-    required this.title,
-    required this.titleHighlight,
+// Placeholder shown when the image asset isn't found yet.
+class _PlaceholderIllustration extends StatelessWidget {
+  const _PlaceholderIllustration();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Container(
+          width: 160,
+          height: 160,
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.local_car_wash_rounded,
+            size: 90,
+            color: Colors.white,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          'Add your illustration here',
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.6),
+            fontSize: 12,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── DATA MODEL ───────────────────────────────────────────────────────────────
+class OnboardingData {
+  final String highlightedTitle; // shown in blue
+  final String restTitle;        // shown in black (include \n if needed)
+  final String description;
+  final String imagePath;
+
+  const OnboardingData({
+    required this.highlightedTitle,
+    required this.restTitle,
     required this.description,
+    required this.imagePath,
   });
 }

@@ -12,7 +12,9 @@ class Assets {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
+  final AssetGenImage car = const AssetGenImage('assets/images/car.png');
   final AssetGenImage image3 = const AssetGenImage('assets/images/image_3.png');
+  final AssetGenImage img = const AssetGenImage('assets/images/bike.png');
   final AssetGenImage img1 = const AssetGenImage('assets/images/img_1.png');
   final AssetGenImage img2 = const AssetGenImage('assets/images/img_2.png');
 }

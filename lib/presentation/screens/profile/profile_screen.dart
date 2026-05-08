@@ -23,7 +23,7 @@ class ProfileScreen extends StatelessWidget {
             ),
             child: IconButton(
               icon: const Icon(Icons.arrow_back_ios_new, size: 18, color: Colors.black),
-              onPressed: () => Navigator.pop(context),
+              onPressed: (){},
             ),
           ),
         ),
