@@ -20,19 +20,35 @@ class AuthRemoteDataSource {
     }
   }
 
-  Future<AuthResponse> verifyOtp(String mobile, String otp) async {
+  Future<AuthResponse> verifyOtp(
+      String mobile,
+      String otp,
+      ) async {
+
     final response = await dio.post(
+
       '/consumer-auth/login/verify-otp',
 
-      data: {"mobile": mobile, "otp": otp},
+      data: {
+        "mobile": mobile,
+        "otp": otp,
+      },
     );
 
-    final authResponse = AuthResponse.fromJson(response.data);
+    final authResponse =
+    AuthResponse.fromJson(response.data);
 
-    /// SAVE TOKEN
-    await storage.write(key: 'token', value: authResponse.accessToken);
+    /// SAVE ACCESS TOKEN
+    await storage.write(
+      key: 'token',
+      value: authResponse.accessToken ?? '',
+    );
 
-    print("TOKEN SAVED => ${authResponse.accessToken}");
+    /// CHECK TOKEN
+    final savedToken =
+    await storage.read(key: 'token');
+
+    print("TOKEN SAVED => $savedToken");
 
     return authResponse;
   }

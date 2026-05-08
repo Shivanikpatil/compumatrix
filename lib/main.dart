@@ -31,10 +31,10 @@ class MyApp extends StatelessWidget {
           create: (_) => AuthProvider(authRepository: InjectionContainer.authRepository),
         ),
         ChangeNotifierProvider(
-          create: (_) => VehicleProvider(vehicleRepository: InjectionContainer.vehicleRepository),
+          create: (_) => VehicleProvider(),
         ),
         ChangeNotifierProvider(
-          create: (_) => ServiceProvider(serviceRepository: InjectionContainer.serviceRepository),
+          create: (_) => ServiceProvider(),
         ),
       ],
       child: Consumer<LocalizationProvider>(

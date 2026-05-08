@@ -60,14 +60,14 @@ class ProfileScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 32),
-          _buildProfileItem(
-            icon: Icons.directions_car_outlined,
-            title: 'My Vehicles',
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const VehicleListScreen()),
-            ),
-          ),
+          // _buildProfileItem(
+          //   icon: Icons.directions_car_outlined,
+          //   title: 'My Vehicles',
+          //   onTap: () => Navigator.push(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const VehicleListScreen()),
+          //   ),
+          // ),
           _buildProfileItem(
             icon: Icons.notifications_none,
             title: 'Notifications',

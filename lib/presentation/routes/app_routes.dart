@@ -3,6 +3,7 @@ import '../screens/auth/login_screen.dart';
 import '../screens/auth/otp_verification_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/vehicles/add_vehicle_screen.dart';
+import '../screens/vehicles/vehicle_list_screen.dart';
 
 class AppRoutes {
   static const String login = '/login';
@@ -14,6 +15,6 @@ class AppRoutes {
     login: (context) => const LoginScreen(),
     otp: (context) => const OtpVerificationScreen(),
     home: (context) => const HomeScreen(),
-    addVehicle: (context) => const AddVehicleScreen(),
+    addVehicle: (context) => const MyVehiclesScreen (),
   };
 }

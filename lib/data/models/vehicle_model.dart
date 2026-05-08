@@ -31,3 +31,39 @@ class Vehicle {
     };
   }
 }
+class VehicleModel {
+  final String id;
+  final String regNo;
+  final String vehicleName;
+  final String vehicleType;
+  final List<String> vehicleImage;
+  final String createdAt;
+
+  VehicleModel({
+    required this.id,
+    required this.regNo,
+    required this.vehicleName,
+    required this.vehicleType,
+    required this.vehicleImage,
+    required this.createdAt,
+  });
+
+  factory VehicleModel.fromJson(Map<String, dynamic> json) {
+    return VehicleModel(
+      id: json['_id']?.toString() ?? '',
+      regNo: json['reg_no']?.toString() ?? '',
+      vehicleName: json['vehicle_name']?.toString() ?? '',
+      vehicleType: json['vehicle_type']?.toString() ?? '',
+      vehicleImage: (json['vehicle_image'] is List)
+          ? List<String>.from(
+          (json['vehicle_image'] as List).map((e) => e?.toString() ?? ''))
+          : [],
+      createdAt: json['createdAt']?.toString() ?? '',
+    );
+  }
+
+  bool get isTwoWheeler => vehicleType == 'two_wheeler';
+
+  String get displayName =>
+      vehicleName.trim().isEmpty ? 'Unknown Vehicle' : vehicleName.trim();
+}

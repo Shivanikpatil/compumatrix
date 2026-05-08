@@ -29,11 +29,12 @@ class DioClient {
         onRequest: (options, handler) async {
 
           final token =
-          await _storage.read(key: 'accessToken');
+          await _storage.read(key: 'token');
 
           print("TOKEN => $token");
 
-          if (token != null && token.isNotEmpty) {
+          if (token != null &&
+              token.isNotEmpty) {
 
             options.headers['Authorization'] =
             'Bearer $token';
@@ -41,7 +42,6 @@ class DioClient {
 
           return handler.next(options);
         },
-
         onResponse: (response, handler) {
 
           return handler.next(response);
@@ -49,12 +49,12 @@ class DioClient {
 
         onError: (DioException e, handler) async {
 
-          if (e.response?.statusCode == 401) {
-
-            await _storage.delete(key: 'accessToken');
-
-            print("Unauthorized - Token Removed");
-          }
+          // if (e.response?.statusCode == 401) {
+          //
+          //   await _storage.delete(key: 'accessToken');
+          //
+          //   print("Unauthorized - Token Removed");
+          // }
 
           return handler.next(e);
         },
