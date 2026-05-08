@@ -18,7 +18,6 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
-        // Removes the default back button to use the custom one
         automaticallyImplyLeading: false,
         leading: Padding(
           padding: const EdgeInsets.only(left: 20, top: 8, bottom: 8),
@@ -84,7 +83,6 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
               padding: const EdgeInsets.only(bottom: 30),
               child: Column(
                 children: [
-                  // ✅ Show inline error if nothing selected
                   if (selectedType == null)
                     const Padding(
                       padding: EdgeInsets.only(bottom: 12),
@@ -104,13 +102,11 @@ class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton(
-                      // ✅ Block navigation if nothing selected
                       onPressed: () {
                         if (selectedType == null) {
                           setState(() {}); // triggers the error message above
                           return;
                         }
-                        // ✅ Map local key → API value and pass it forward
                         final apiType = selectedType == 'four'
                             ? 'four_wheeler'
                             : 'two_wheeler';

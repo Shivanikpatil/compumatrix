@@ -1,4 +1,3 @@
-// lib/presentation/providers/vehicle_provider.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../../data/datasources/vehicle_remote_datasource.dart';
@@ -10,12 +9,13 @@ class VehicleProvider extends ChangeNotifier {
   List<VehicleModel> vehicles = [];
   bool isLoading = false;
   String? errorMessage;
+
   void setSelectedVehicleType(String type) {
     selectedVehicleType = type;
     notifyListeners();
   }
-  // Add vehicle form state
-  String? selectedVehicleType;  // "two_wheeler" or "four_wheeler"
+
+  String? selectedVehicleType;
   File? selectedImage;
   String vehicleName = '';
   String regNo = '';
@@ -35,7 +35,6 @@ class VehicleProvider extends ChangeNotifier {
   }
 
   Future<bool> addVehicle() async {
-    // ── Validation
     if (selectedVehicleType == null) {
       errorMessage = 'Please select a vehicle type.';
       notifyListeners();
@@ -52,8 +51,7 @@ class VehicleProvider extends ChangeNotifier {
       return false;
     }
 
-    // ── API call
-    errorMessage = null;        // clear any previous error
+    errorMessage = null;
     isLoading = true;
     notifyListeners();
 
@@ -68,15 +66,14 @@ class VehicleProvider extends ChangeNotifier {
       _resetForm();
       return true;
     } catch (e) {
-      // Show the real message thrown from the data source
       errorMessage = e.toString().replaceFirst('Exception: ', '');
       return false;
     } finally {
-      // ✅ Always reset loading — was missing on success path
       isLoading = false;
       notifyListeners();
     }
   }
+
   Future<void> deleteVehicle(String vehicleId) async {
     try {
       await _dataSource.deleteVehicle(vehicleId);

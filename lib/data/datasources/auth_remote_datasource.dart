@@ -1,4 +1,3 @@
-// lib/data/datasources/auth_remote_datasource.dart
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../../core/constants/api_constants.dart';
@@ -28,25 +27,24 @@ class AuthRemoteDataSource {
         },
       );
       
-      debugPrint('Verify OTP Response: ${response.data}');
-
-      final dynamic responseBody = response.data;
+      final dynamic responseData = response.data;
       String? token;
 
-      if (responseBody is Map) {
-        final dynamic dataField = responseBody['data'];
-        if (dataField is Map) {
-          // Check common token keys
-          token = dataField['token']?.toString() ?? 
-                  dataField['accessToken']?.toString() ?? 
-                  dataField['auth_token']?.toString();
-        } else if (dataField is String) {
-          token = dataField;
+      if (responseData != null && responseData is Map) {
+        final dynamic dataField = responseData['data'];
+        
+        if (dataField != null) {
+          if (dataField is Map) {
+            token = dataField['token']?.toString() ?? 
+                    dataField['accessToken']?.toString() ?? 
+                    dataField['auth_token']?.toString();
+          } else if (dataField is String) {
+            token = dataField;
+          }
         }
       }
 
       if (token == null || token.isEmpty) {
-        debugPrint('Token not found in response: $responseBody');
         throw Exception('Authentication token not found in server response');
       }
 
@@ -55,18 +53,22 @@ class AuthRemoteDataSource {
     } on DioException catch (e) {
       throw Exception(_getErrorMessage(e));
     } catch (e) {
-      debugPrint('Unexpected error during OTP verify: $e');
+      if (e is TypeError) {
+        throw Exception('Data format error: ${e.toString()}');
+      }
       throw Exception('An unexpected error occurred during verification');
     }
   }
 
   String _getErrorMessage(DioException e) {
-    if (e.response?.data is Map) {
-      final Map data = e.response!.data;
-      return data['message']?.toString() ?? 
-             data['error']?.toString() ?? 
-             'Server error: ${e.response?.statusCode}';
-    }
+    try {
+      if (e.response?.data != null && e.response?.data is Map) {
+        final Map data = e.response!.data;
+        return data['message']?.toString() ?? 
+               data['error']?.toString() ?? 
+               'Server error: ${e.response?.statusCode}';
+      }
+    } catch (_) {}
     return e.message ?? 'A network error occurred';
   }
 }

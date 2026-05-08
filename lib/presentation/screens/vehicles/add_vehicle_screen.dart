@@ -22,7 +22,6 @@ class _AddVehicleScreenState extends State<AddVehicleScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // ✅ Receive the vehicle type passed from the previous screen
       final vehicleType = ModalRoute.of(context)?.settings.arguments as String?;
       if (vehicleType != null) {
         context.read<VehicleProvider>().setSelectedVehicleType(vehicleType);
