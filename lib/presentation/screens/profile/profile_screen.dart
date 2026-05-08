@@ -70,19 +70,11 @@ class ProfileScreen extends StatelessWidget {
           // ),
           _buildProfileItem(
             icon: Icons.notifications_none,
-            title: 'Notifications',
-            onTap: () {},
+            title: 'My Vehicle',
+            onTap: () => Navigator.pushNamed(context, '/vehicles'),
+
           ),
-          _buildProfileItem(
-            icon: Icons.history,
-            title: 'Service History',
-            onTap: () {},
-          ),
-          _buildProfileItem(
-            icon: Icons.settings_outlined,
-            title: 'Settings',
-            onTap: () {},
-          ),
+
           const Spacer(),
           Padding(
             padding: const EdgeInsets.all(24.0),
