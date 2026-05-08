@@ -1,156 +1,247 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:dotted_border/dotted_border.dart';
-import 'package:provider/provider.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../data/models/vehicle_model.dart';
-import '../../providers/vehicle_provider.dart';
+import '../../../generated/assets.dart'; // Ensure these paths are correct in your project
 
-class AddVehicleDetailsScreen extends StatefulWidget {
-  final String vehicleType;
-
-  const AddVehicleDetailsScreen({super.key, required this.vehicleType});
+class AddNewVehicleScreen extends StatefulWidget {
+  const AddNewVehicleScreen({super.key});
 
   @override
-  State<AddVehicleDetailsScreen> createState() => _AddVehicleDetailsScreenState();
+  State<AddNewVehicleScreen> createState() => _AddNewVehicleScreenState();
 }
 
-class _AddVehicleDetailsScreenState extends State<AddVehicleDetailsScreen> {
-  final _nameController = TextEditingController();
-  final _regController = TextEditingController();
-  File? _image;
-  final _picker = ImagePicker();
-
-  Future<void> _pickImage() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-    }
-  }
-
-  void _onSave() async {
-    if (_nameController.text.isEmpty || _regController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields')),
-      );
-      return;
-    }
-
-    final vehicle = Vehicle(
-      id: '', // Will be assigned by API or locally
-      vehicleName: _nameController.text,
-      regNo: _regController.text,
-      vehicleType: widget.vehicleType,
-    );
-
-    final success = await context.read<VehicleProvider>().addVehicle(
-          vehicle,
-          _image?.path,
-        );
-
-    if (success && mounted) {
-      Navigator.popUntil(context, (route) => route.isFirst);
-      // Ideally, navigate to vehicle list tab
-    }
-  }
+class _AddNewVehicleScreenState extends State<AddNewVehicleScreen> {
+  String? selectedType;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.black),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Add New Vehicle',
-          style: GoogleFonts.poppins(
-            color: Colors.black,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-          ),
-        ),
         backgroundColor: Colors.white,
         elevation: 0,
+        // Removes the default back button to use the custom one
+        automaticallyImplyLeading: false,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 20, top: 8, bottom: 8),
+          child: GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade200),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.arrow_back_ios_new, size: 16, color: Colors.black),
+            ),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SizedBox(height: 10),
-            GestureDetector(
-              onTap: _pickImage,
-              child: DottedBorder(
-                borderType: BorderType.RRect,
-                radius: const Radius.circular(20),
-                dashPattern: const [8, 4],
-                color: const Color(0xFF2155FF).withOpacity(0.5),
-                strokeWidth: 2,
-                child: Container(
-                  width: double.infinity,
-                  height: 180,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5F7FA),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: _image != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: Image.file(_image!, fit: BoxFit.cover),
-                        )
-                      : Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.cloud_upload_outlined, size: 48, color: Color(0xFF2155FF)),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Add Car Image',
-                              style: GoogleFonts.poppins(
-                                color: const Color(0xFF2155FF),
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                              ),
-                            ),
-                            Text(
-                              '(Front or Side View)',
-                              style: GoogleFonts.poppins(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
-                        ),
-                ),
+            const SizedBox(height: 24),
+            const Text(
+              "Add New Vehicle",
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF0F172A), // Deep Navy/Black
               ),
             ),
             const SizedBox(height: 32),
-            CustomTextField(
-              controller: _nameController,
-              labelText: 'Vehicle Name',
-              hintText: 'Enter Vehicle Name (e.g. BMW)',
+            const Text(
+              "Choose Vehicle Type",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569), // Slate Grey
+              ),
             ),
-            const SizedBox(height: 24),
-            CustomTextField(
-              controller: _regController,
-              labelText: 'Registration Number',
-              hintText: 'Enter Registration Number',
+            const SizedBox(height: 20),
+
+            // Four Wheeler Card
+            VehicleTypeCard(
+              title: "Four Wheeler",
+              imagePath: Assets.images.img3.path, // Replace with your actual car asset
+              isSelected: selectedType == "four",
+              onTap: () => setState(() => selectedType = "four"),
             ),
-            const SizedBox(height: 48),
-            Consumer<VehicleProvider>(
-              builder: (context, provider, _) {
-                return CustomButton(
-                  text: 'Save Vehicle',
-                  isLoading: provider.isLoading,
-                  onPressed: _onSave,
-                );
-              },
+
+            const SizedBox(height: 20),
+
+            // Two Wheeler Card
+            VehicleTypeCard(
+              title: "Two Wheeler",
+              imagePath: Assets.images.img.path, // Replace with your actual scooter asset
+              isSelected: selectedType == "two",
+              onTap: () => setState(() => selectedType = "two"),
+            ),
+
+            const Spacer(),
+
+            // Continue Button
+            Padding(
+              padding: const EdgeInsets.only(bottom: 30),
+              child: Column(
+                children: [
+                  // ✅ Show inline error if nothing selected
+                  if (selectedType == null)
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 12),
+                      child: Row(
+                        children: [
+                          Icon(Icons.info_outline, size: 15, color: Colors.red),
+                          SizedBox(width: 6),
+                          Text(
+                            'Please select a vehicle type to continue.',
+                            style: TextStyle(color: Colors.red, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      // ✅ Block navigation if nothing selected
+                      onPressed: () {
+                        if (selectedType == null) {
+                          setState(() {}); // triggers the error message above
+                          return;
+                        }
+                        // ✅ Map local key → API value and pass it forward
+                        final apiType = selectedType == 'four'
+                            ? 'four_wheeler'
+                            : 'two_wheeler';
+
+                        Navigator.pushNamed(
+                          context,
+                          '/add-vehicle',
+                          arguments: apiType, // 👈 pass to next screen
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1D4ED8),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class VehicleTypeCard extends StatelessWidget {
+  final String title;
+  final String imagePath;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const VehicleTypeCard({
+    super.key,
+    required this.title,
+    required this.imagePath,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: double.maxFinite,
+        height: 140,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(
+            color: isSelected ? const Color(0xFF1D4ED8) : Colors.grey.shade200,
+            width: isSelected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: isSelected ? [
+            BoxShadow(
+              color: const Color(0xFF1D4ED8).withOpacity(0.1),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ] : [],
+        ),
+        child: Stack(
+          children: [
+            // Text and Radio Button
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF0F172A),
+                    ),
+                  ),
+                  // Radio Indicator
+                  Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isSelected ? const Color(0xFF1D4ED8) : Colors.black,
+                        width: 1.5,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF1D4ED8),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                        : null,
+                  ),
+                ],
+              ),
+            ),
+
+            // Image positioning
+            Positioned(
+              right: -10, // Slight negative offset for that modern look
+              bottom: 10,
+              child: Image.asset(
+                imagePath,
+                height: 110,
+                width: 180,
+                fit: BoxFit.contain,
+                // Fallback for missing images
+                errorBuilder: (context, error, stackTrace) => const SizedBox(),
+              ),
             ),
           ],
         ),

@@ -1,33 +1,36 @@
-class Vehicle {
+// lib/data/models/vehicle_model.dart
+class VehicleModel {
   final String id;
   final String regNo;
-  final String vehicleType;
   final String vehicleName;
-  final String? imageUrl;
+  final String vehicleType;   // "two_wheeler" | "four_wheeler"
+  final List<String> vehicleImage;
 
-  Vehicle({
+  VehicleModel({
     required this.id,
     required this.regNo,
-    required this.vehicleType,
     required this.vehicleName,
-    this.imageUrl,
+    required this.vehicleType,
+    required this.vehicleImage,
   });
 
-  factory Vehicle.fromJson(Map<String, dynamic> json) {
-    return Vehicle(
-      id: json['id']?.toString() ?? '',
-      regNo: json['reg_no'] ?? '',
-      vehicleType: json['vehicle_type'] ?? '',
-      vehicleName: json['vehicle_name'] ?? '',
-      imageUrl: json['image'],
+  factory VehicleModel.fromJson(Map<String, dynamic> json) {
+    return VehicleModel(
+      id: json['_id'] as String? ?? '',
+      regNo: json['reg_no'] as String? ?? '',
+      vehicleName: json['vehicle_name'] as String? ?? '',
+      vehicleType: json['vehicle_type'] as String? ?? '',
+      vehicleImage: List<String>.from(json['vehicle_image'] ?? []),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'reg_no': regNo,
-      'vehicle_type': vehicleType,
-      'vehicle_name': vehicleName,
-    };
+  /// Full image URL ready for CachedNetworkImage
+  String get primaryImageUrl {
+    if (vehicleImage.isEmpty) return '';
+    return 'https://wa-peke-api.demohub.tech/${vehicleImage.first}';
   }
+
+  /// Display-friendly label
+  String get typeLabel =>
+      vehicleType == 'two_wheeler' ? 'Two Wheeler' : 'Four Wheeler';
 }

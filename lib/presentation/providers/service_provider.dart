@@ -1,32 +1,40 @@
+// lib/presentation/providers/service_provider.dart
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import '../../core/network/dio_client.dart';
+import '../../core/constants/api_constants.dart';
 import '../../data/models/service_model.dart';
-import '../../domain/repositories/service_repository.dart';
 
 class ServiceProvider extends ChangeNotifier {
-  final ServiceRepository serviceRepository;
+  final Dio _dio = DioClient.getInstance();
 
-  ServiceProvider({required this.serviceRepository});
+  List<ServiceModel> services = [];
+  bool isLoading = false;
+  String? errorMessage;
+  int selectedTab = 0; // 0 = Fixed Price, 1 = Get a Quote
 
-  List<ActiveService> _services = [];
-  List<ActiveService> get services => _services;
+  void setTab(int index) {
+    selectedTab = index;
+    notifyListeners();
+  }
 
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  Future<void> fetchActiveServices() async {
-    _isLoading = true;
-    _errorMessage = null;
+  Future<void> fetchServices() async {
+    isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     try {
-      _services = await serviceRepository.getActiveServices();
+      final response = await _dio.get(ApiConstants.activeServices);
+      final outer = response.data['data'] as Map<String, dynamic>?;
+      final data = (outer?['data'] as List?) ?? [];
+
+      services = data
+          .map((e) => ServiceModel.fromJson(e as Map<String, dynamic>))
+          .toList();
     } catch (e) {
-      _errorMessage = e.toString();
+      errorMessage = 'Failed to load services. Please try again.';
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }

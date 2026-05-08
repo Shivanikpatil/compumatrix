@@ -1,10 +1,7 @@
+// lib/presentation/screens/splash/splash_screen.dart
+import 'package:compumatrix/generated/assets.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../providers/auth_provider.dart';
-import '../onboarding/onboarding_screen.dart';
-import '../home/home_screen.dart';
-import '../auth/login_screen.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -17,36 +14,19 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _navigateToNext();
+    _navigate();
   }
 
-  void _navigateToNext() async {
-    await Future.delayed(const Duration(seconds: 3));
+  Future<void> _navigate() async {
+    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
-
-    final prefs = await SharedPreferences.getInstance();
-    final isFirstTime = prefs.getBool('isFirstTime') ?? true;
-
-    if (isFirstTime) {
-      if (mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        );
-      }
-      return;
-    }
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isLoggedIn = await authProvider.isLoggedIn();
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => isLoggedIn ? const HomeScreen() : const LoginScreen(),
-        ),
-      );
+    const storage = FlutterSecureStorage();
+    final token = await storage.read(key: 'auth_token');
+    if (!mounted) return;
+    if (token != null && token.isNotEmpty) {
+      Navigator.pushReplacementNamed(context, '/home');
+    } else {
+      Navigator.pushReplacementNamed(context, '/onboarding');
     }
   }
 
@@ -55,15 +35,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: Center(
-        child: Container(
-          width: 120,
-          height: 120,
-          decoration: const BoxDecoration(
-            color: Color(0xFF0055FF),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(Icons.car_repair, size: 70, color: Colors.white),
-        ),
+        child: Image.asset(Assets.images.image3.path, width: 120, height: 120),
       ),
     );
   }

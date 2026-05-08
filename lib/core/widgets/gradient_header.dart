@@ -27,13 +27,12 @@ class GradientHeader extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2155FF), Color(0xFF0033BB)],
-        ),
-        borderRadius: BorderRadius.only(
-          bottomLeft: Radius.circular(40),
-          bottomRight: Radius.circular(40),
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [
+            Color(0xFF78A7F6), // Light Blue
+            Color(0xFF1D4ED8), // Brand Blue
+          ],
         ),
       ),
       child: SafeArea(
