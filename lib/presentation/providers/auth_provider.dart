@@ -1,79 +1,53 @@
+// lib/presentation/providers/auth_provider.dart
 import 'package:flutter/material.dart';
-import '../../domain/repositories/auth_repository.dart';
+import '../../data/datasources/auth_remote_datasource.dart';
+import '../../core/storage/secure_storage.dart';
 
 class AuthProvider extends ChangeNotifier {
-  final AuthRepository authRepository;
+  final AuthRemoteDataSource _dataSource = AuthRemoteDataSource();
 
-  AuthProvider({required this.authRepository});
-
-  bool _isLoading = false;
-  bool get isLoading => _isLoading;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  String? _mobile;
-  String? get mobile => _mobile;
-
-  void _setLoading(bool value) {
-    _isLoading = value;
-    notifyListeners();
-  }
-
-  void _setError(String? value) {
-    _errorMessage = value;
-    notifyListeners();
-  }
+  bool isLoading = false;
+  String? errorMessage;
+  String? mobileNumber;
 
   Future<bool> requestOtp(String mobile) async {
-    _setLoading(true);
-    _setError(null);
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
     try {
-      await authRepository.requestOtp(mobile);
-      _mobile = mobile;
-      _setLoading(false);
+      await _dataSource.requestOtp(mobile);
+      mobileNumber = mobile;
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      isLoading = false;
+      notifyListeners();
       return false;
     }
   }
 
   Future<bool> verifyOtp(String otp) async {
-    if (_mobile == null) return false;
-
-    _setLoading(true);
-    _setError(null);
-
+    if (mobileNumber == null) return false;
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
     try {
-
-      await authRepository.verifyOtp(
-        _mobile!,
-        otp,
-      );
-
-      _setLoading(false);
-
+      await _dataSource.verifyOtp(mobileNumber!, otp);
+      isLoading = false;
+      notifyListeners();
       return true;
-
     } catch (e) {
-
-      _setError(e.toString());
-
-      _setLoading(false);
-
+      errorMessage = e.toString().replaceFirst('Exception: ', '');
+      isLoading = false;
+      notifyListeners();
       return false;
     }
   }
 
   Future<void> logout() async {
-    await authRepository.logout();
+    await SecureStorage.clearAll();
     notifyListeners();
-  }
-
-  Future<bool> isLoggedIn() async {
-    final token = await authRepository.getToken();
-    return token != null;
   }
 }

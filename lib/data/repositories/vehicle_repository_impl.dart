@@ -1,3 +1,5 @@
+// lib/data/repositories/vehicle_repository_impl.dart
+import 'dart:io';
 import '../../domain/repositories/vehicle_repository.dart';
 import '../datasources/vehicle_remote_datasource.dart';
 import '../models/vehicle_model.dart';
@@ -8,13 +10,23 @@ class VehicleRepositoryImpl implements VehicleRepository {
   VehicleRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<Vehicle>> getVehicles() async {
+  Future<List<VehicleModel>> getVehicles() async {
     return await remoteDataSource.getVehicles();
   }
 
   @override
-  Future<void> addVehicle(Vehicle vehicle, String? imagePath) async {
-    await remoteDataSource.addVehicle(vehicle, imagePath);
+  Future<void> addVehicle({
+    required String vehicleName,
+    required String regNo,
+    required String vehicleType,
+    required File imageFile,
+  }) async {
+    await remoteDataSource.addVehicle(
+      vehicleName: vehicleName,
+      regNo: regNo,
+      vehicleType: vehicleType,
+      imageFile: imageFile,
+    );
   }
 
   @override

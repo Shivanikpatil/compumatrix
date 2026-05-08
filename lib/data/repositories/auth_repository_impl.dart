@@ -1,7 +1,7 @@
+// lib/data/repositories/auth_repository_impl.dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_remote_datasource.dart';
-import '../models/auth_model.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource remoteDataSource;
@@ -18,26 +18,25 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<AuthResponse> verifyOtp(String mobile, String otp) async {
-    final response = await remoteDataSource.verifyOtp(mobile, otp);
-    if (response.accessToken != null) {
-      await saveToken(response.accessToken!);
-    }
-    return response;
+  Future<String> verifyOtp(String mobile, String otp) async {
+    final token = await remoteDataSource.verifyOtp(mobile, otp);
+    await saveToken(token);
+    return token;
   }
 
   @override
   Future<void> saveToken(String token) async {
-    await storage.write(key: 'token', value: token);
+    // Standardizing on 'auth_token' as used in SecureStorage and SplashScreen
+    await storage.write(key: 'auth_token', value: token);
   }
 
   @override
   Future<String?> getToken() async {
-    return await storage.read(key: 'token');
+    return await storage.read(key: 'auth_token');
   }
 
   @override
   Future<void> logout() async {
-    await storage.delete(key: 'token');
+    await storage.delete(key: 'auth_token');
   }
 }

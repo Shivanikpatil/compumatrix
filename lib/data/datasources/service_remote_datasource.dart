@@ -1,39 +1,26 @@
+// lib/data/datasources/service_remote_datasource.dart
 import 'package:dio/dio.dart';
 import '../../core/constants/api_constants.dart';
-import '../../core/network/secure_storage.dart';
+import '../../core/network/dio_client.dart';
 import '../models/service_model.dart';
 
 class ServiceRemoteDataSource {
-  final Dio dio;
+  final Dio _dio = DioClient.getInstance();
 
-  ServiceRemoteDataSource(this.dio);
-
-  Future<List<ActiveService>> getActiveServices() async {
+  Future<List<ServiceModel>> getActiveServices() async {
     try {
-      final token = await SecureStorageService.getToken();
-
-      final response = await dio.get(
-        ApiConstants.activeServices,
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $token',
-          },
-        ),
-      );
-
-      final List data = response.data['data'] ?? [];
+      final response = await _dio.get(ApiConstants.activeServices);
+      
+      // The API returns { "data": { "data": [...] } }
+      final outer = response.data['data'] as Map<String, dynamic>?;
+      final data = (outer?['data'] as List?) ?? [];
 
       return data
-          .map((json) => ActiveService.fromJson(json))
+          .map((json) => ServiceModel.fromJson(json as Map<String, dynamic>))
           .toList();
-
     } on DioException catch (e) {
-
-      print("ERROR => ${e.response?.data}");
-
       throw Exception(
-        e.response?.data['message'] ??
-            'Failed to fetch services',
+        e.response?.data['message'] ?? 'Failed to fetch services',
       );
     }
   }

@@ -1,10 +1,7 @@
-import 'package:compumatrix/presentation/screens/auth/sign_up_screen.dart';
+// lib/presentation/screens/auth/login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../../core/widgets/custom_button.dart';
-import '../../../core/widgets/custom_text_field.dart';
-import '../../../core/widgets/gradient_header.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../providers/auth_provider.dart';
 import 'otp_verification_screen.dart';
 
@@ -16,7 +13,7 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _mobileController = TextEditingController();
+  final TextEditingController _mobileController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -25,13 +22,21 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onSendOtp() async {
+  void _sendOtp() async {
     if (_formKey.currentState!.validate()) {
-      final success = await context.read<AuthProvider>().requestOtp('+${_mobileController.text}');
+      final auth = context.read<AuthProvider>();
+      final mobile = '+${_mobileController.text.trim()}';
+      final success = await auth.requestOtp(mobile);
       if (success && mounted) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const OtpVerificationScreen()),
+          MaterialPageRoute(
+            builder: (context) => const OtpVerificationScreen(),
+          ),
+        );
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(auth.errorMessage ?? 'Error sending OTP')),
         );
       }
     }
@@ -40,48 +45,92 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            const GradientHeader(
-              title: 'Sign in to your\nAccount',
-              // Removed subtitleWidget from here as requested
-            ),
+            // Header with Gradient
             Container(
+              height: 300,
+              width: double.infinity,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                ),
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(40),
+                  bottomRight: Radius.circular(40),
+                ),
+              ),
+              child: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      Text(
+                        'Sign in to your\nAccount',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 8),
+                      Text(
+                        'Enter your mobile number to continue',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Form(
                 key: _formKey,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 40),
-                    CustomTextField(
+                    const Text(
+                      'Mobile Number',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextFormField(
                       controller: _mobileController,
-                      labelText: 'Enter Mobile Number',
-                      hintText: '98765 43210',
                       keyboardType: TextInputType.phone,
-                      prefixIcon: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Image.network(
-                              'https://flagcdn.com/w40/in.png',
-                              width: 24,
-                              errorBuilder: (_, __, ___) => const Icon(Icons.flag),
+                      decoration: InputDecoration(
+                        hintText: '98765 43210',
+                        prefixIcon: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                          child: Text(
+                            '+91 | ',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textPrimary,
                             ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              '+91',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(width: 1, height: 20, color: Colors.grey[300]),
-                          ],
+                          ),
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.cardBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.cardBorder),
                         ),
                       ),
                       validator: (v) {
@@ -93,62 +142,35 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 32),
                     Consumer<AuthProvider>(
                       builder: (context, auth, _) {
-                        return CustomButton(
-                          text: 'Send OTP',
-                          isLoading: auth.isLoading,
-                          onPressed: _onSendOtp,
+                        return ElevatedButton(
+                          onPressed: auth.isLoading ? null : _sendOtp,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            minimumSize: const Size(double.infinity, 52),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: auth.isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text(
+                                  'Send OTP',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white,
+                                  ),
+                                ),
                         );
                       },
                     ),
-                    const SizedBox(height: 24),
-                    // "Don't have an account? Sign Up" moved here
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "Don't have an account? ",
-                          style: GoogleFonts.poppins(color: Colors.grey, fontSize: 14),
-                        ),
-                        GestureDetector(
-                          onTap: () {
-                       Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const SignUpScreen()),
-                        );
-                          },
-                          child: Text(
-                            'Sign Up',
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFF2155FF),
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    Center(
-                      child: Text.rich(
-                        TextSpan(
-                          text: 'By signing up, you agree to our ',
-                          style: GoogleFonts.poppins(color: Colors.grey, fontSize: 12),
-                          children: [
-                            TextSpan(
-                              text: 'Terms and Conditions\n',
-                              style: const TextStyle(color: Color(0xFF2155FF), fontWeight: FontWeight.w600),
-                            ),
-                            const TextSpan(text: 'and '),
-                            TextSpan(
-                              text: 'Privacy Policy',
-                              style: const TextStyle(color: Color(0xFF2155FF), fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
                   ],
                 ),
               ),

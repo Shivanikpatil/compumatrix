@@ -1,43 +1,10 @@
-class Vehicle {
-  final String id;
-  final String regNo;
-  final String vehicleType;
-  final String vehicleName;
-  final String? imageUrl;
-
-  Vehicle({
-    required this.id,
-    required this.regNo,
-    required this.vehicleType,
-    required this.vehicleName,
-    this.imageUrl,
-  });
-
-  factory Vehicle.fromJson(Map<String, dynamic> json) {
-    return Vehicle(
-      id: json['id']?.toString() ?? '',
-      regNo: json['reg_no'] ?? '',
-      vehicleType: json['vehicle_type'] ?? '',
-      vehicleName: json['vehicle_name'] ?? '',
-      imageUrl: json['image'],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'reg_no': regNo,
-      'vehicle_type': vehicleType,
-      'vehicle_name': vehicleName,
-    };
-  }
-}
+// lib/data/models/vehicle_model.dart
 class VehicleModel {
   final String id;
   final String regNo;
   final String vehicleName;
-  final String vehicleType;
+  final String vehicleType;   // "two_wheeler" | "four_wheeler"
   final List<String> vehicleImage;
-  final String createdAt;
 
   VehicleModel({
     required this.id,
@@ -45,25 +12,25 @@ class VehicleModel {
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleImage,
-    required this.createdAt,
   });
 
   factory VehicleModel.fromJson(Map<String, dynamic> json) {
     return VehicleModel(
-      id: json['_id']?.toString() ?? '',
-      regNo: json['reg_no']?.toString() ?? '',
-      vehicleName: json['vehicle_name']?.toString() ?? '',
-      vehicleType: json['vehicle_type']?.toString() ?? '',
-      vehicleImage: (json['vehicle_image'] is List)
-          ? List<String>.from(
-          (json['vehicle_image'] as List).map((e) => e?.toString() ?? ''))
-          : [],
-      createdAt: json['createdAt']?.toString() ?? '',
+      id: json['_id'] as String? ?? '',
+      regNo: json['reg_no'] as String? ?? '',
+      vehicleName: json['vehicle_name'] as String? ?? '',
+      vehicleType: json['vehicle_type'] as String? ?? '',
+      vehicleImage: List<String>.from(json['vehicle_image'] ?? []),
     );
   }
 
-  bool get isTwoWheeler => vehicleType == 'two_wheeler';
+  /// Full image URL ready for CachedNetworkImage
+  String get primaryImageUrl {
+    if (vehicleImage.isEmpty) return '';
+    return 'https://wa-peke-api.demohub.tech/${vehicleImage.first}';
+  }
 
-  String get displayName =>
-      vehicleName.trim().isEmpty ? 'Unknown Vehicle' : vehicleName.trim();
+  /// Display-friendly label
+  String get typeLabel =>
+      vehicleType == 'two_wheeler' ? 'Two Wheeler' : 'Four Wheeler';
 }

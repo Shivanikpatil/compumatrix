@@ -8,7 +8,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
   ServiceRepositoryImpl({required this.remoteDataSource});
 
   @override
-  Future<List<ActiveService>> getActiveServices() async {
+  Future<List<ServiceModel>> getActiveServices() async {
     return await remoteDataSource.getActiveServices();
   }
 }

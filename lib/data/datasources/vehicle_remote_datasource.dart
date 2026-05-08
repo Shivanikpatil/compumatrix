@@ -1,41 +1,41 @@
+// lib/data/datasources/vehicle_remote_datasource.dart
+import 'dart:io';
 import 'package:dio/dio.dart';
-import '../../core/constants/api_constants.dart';
 import '../models/vehicle_model.dart';
+import '../../core/constants/api_constants.dart';
+import '../../core/network/dio_client.dart';
 
 class VehicleRemoteDataSource {
-  final Dio dio;
+  final Dio _dio = DioClient.getInstance();
 
-  VehicleRemoteDataSource(this.dio);
-
-  Future<List<Vehicle>> getVehicles() async {
-    try {
-      final response = await dio.get(ApiConstants.vehicles);
-      final List data = response.data['data'] ?? [];
-      return data.map((json) => Vehicle.fromJson(json)).toList();
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to fetch vehicles');
-    }
+  /// GET /consumer-auth/  → returns data array
+  Future<List<VehicleModel>> getVehicles() async {
+    final response = await _dio.get(ApiConstants.vehicles);
+    final data = response.data['data'] as List<dynamic>;
+    return data.map((e) => VehicleModel.fromJson(e)).toList();
   }
 
-  Future<void> addVehicle(Vehicle vehicle, String? imagePath) async {
-    try {
-      FormData formData = FormData.fromMap({
-        ...vehicle.toJson(),
-        if (imagePath != null)
-          'image': await MultipartFile.fromFile(imagePath),
-      });
-
-      await dio.post(ApiConstants.vehicles, data: formData);
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to add vehicle');
-    }
+  /// POST /consumer-auth/  → multipart form with image + fields
+  Future<void> addVehicle({
+    required String vehicleName,
+    required String regNo,
+    required String vehicleType,  // must be "two_wheeler" or "four_wheeler"
+    required File imageFile,
+  }) async {
+    final formData = FormData.fromMap({
+      'vehicle_name': vehicleName,
+      'reg_no': regNo,
+      'vehicle_type': vehicleType,
+      'vehicle_image': await MultipartFile.fromFile(
+        imageFile.path,
+        filename: imageFile.path.split('/').last,
+      ),
+    });
+    await _dio.post(ApiConstants.vehicles, data: formData);
   }
 
+  /// DELETE /consumer-auth/{id}
   Future<void> deleteVehicle(String vehicleId) async {
-    try {
-      await dio.delete('${ApiConstants.vehicles}$vehicleId');
-    } on DioException catch (e) {
-      throw Exception(e.response?.data['message'] ?? 'Failed to delete vehicle');
-    }
+    await _dio.delete('${ApiConstants.vehicles}$vehicleId');
   }
 }

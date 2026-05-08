@@ -1,7 +1,11 @@
+// lib/presentation/screens/vehicles/vehicle_list_screen.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../../data/models/vehicle_model.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
+import '../../../core/constants/app_colors.dart';
 import '../../providers/vehicle_provider.dart';
+import '../../../data/models/vehicle_model.dart';
 
 class MyVehiclesScreen extends StatefulWidget {
   const MyVehiclesScreen({super.key});
@@ -15,465 +19,209 @@ class _MyVehiclesScreenState extends State<MyVehiclesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<VehicleProvider>().fetchVehicles();
+      context.read<VehicleProvider>().loadVehicles();
     });
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<VehicleProvider>();
+
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ─────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Back button
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: const Color(0xFFE0E8F0),
-                          width: 1,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.chevron_left_rounded,
-                        size: 22,
-                        color: Color(0xFF1A2A3A),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  const Text(
-                    'My Vehicles',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A2A3A),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // ── Content ────────────────────────────────────────────
-            Expanded(
-              child: Consumer<VehicleProvider>(
-                builder: (context, provider, _) {
-                  if (provider.status == VehicleStatus.loading) {
-                    return _buildShimmerGrid();
-                  }
-
-                  if (provider.status == VehicleStatus.error) {
-                    return _buildError(provider.errorMessage, () {
-                      provider.fetchVehicles();
-                    });
-                  }
-
-                  if (provider.vehicles.isEmpty) {
-                    return _buildEmpty();
-                  }
-
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-                    child: GridView.builder(
-                      itemCount: provider.vehicles.length,
-                      gridDelegate:
-                      const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.9,
-                      ),
-                      itemBuilder: (context, index) {
-                        return _VehicleCard(
-                          vehicle: provider.vehicles[index],
-                          onDelete: () => _confirmDelete(
-                            context,
-                            provider,
-                            provider.vehicles[index],
-                          ),
-                        );
-                      },
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            // ── Add New Vehicle button ──────────────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 20),
-              child: SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // Navigate to Add Vehicle screen
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1565C0),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                  ),
-                  child: const Text(
-                    'Add New vehicle',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+      backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'My Vehicles',
+          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
-    );
-  }
-
-  // ── Delete confirmation dialog ──────────────────────────────────────────────
-  void _confirmDelete(
-      BuildContext context,
-      VehicleProvider provider,
-      VehicleModel vehicle,
-      ) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Remove Vehicle',
-            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
-        content: Text(
-          'Remove ${vehicle.displayName} (${vehicle.regNo})?',
-          style: const TextStyle(color: Color(0xFF5A7090), fontSize: 14),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel',
-                style: TextStyle(color: Color(0xFF8A9BB0))),
+      body: Column(
+        children: [
+          Expanded(
+            child: provider.isLoading
+                ? _buildShimmerList()
+                : provider.vehicles.isEmpty
+                    ? _buildEmptyState()
+                    : _buildVehicleList(provider),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              provider.deleteVehicle(vehicle.id);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE24B4A),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: ElevatedButton(
+              onPressed: () => Navigator.pushNamed(context, '/add-vehicle'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                minimumSize: const Size(double.infinity, 52),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text(
+                'Add New Vehicle',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.white),
+              ),
             ),
-            child: const Text('Remove'),
           ),
         ],
       ),
     );
   }
 
-  // ── Shimmer loading grid ────────────────────────────────────────────────────
-  Widget _buildShimmerGrid() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 0),
-      child: GridView.builder(
-        itemCount: 4,
-        physics: const NeverScrollableScrollPhysics(),
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 0.9,
-        ),
-        itemBuilder: (_, __) => _ShimmerCard(),
-      ),
+  Widget _buildVehicleList(VehicleProvider provider) {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: provider.vehicles.length,
+      itemBuilder: (context, index) {
+        final vehicle = provider.vehicles[index];
+        return _VehicleCard(
+          vehicle: vehicle,
+          isFeatured: index == 0,
+          onDelete: () => _showDeleteDialog(context, vehicle),
+        );
+      },
     );
   }
 
-  // ── Empty state ────────────────────────────────────────────────────────────
-  Widget _buildEmpty() {
+  Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.directions_car_outlined,
-              size: 64, color: Colors.grey.shade300),
+          const Icon(Icons.directions_car_outlined, size: 80, color: AppColors.textSecondary),
           const SizedBox(height: 16),
-          Text('No vehicles saved yet',
-              style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.grey.shade500,
-                  fontWeight: FontWeight.w500)),
-          const SizedBox(height: 6),
-          Text('Tap "Add New Vehicle" to get started',
-              style: TextStyle(fontSize: 13, color: Colors.grey.shade400)),
+          const Text(
+            'No vehicles added yet',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Add your first vehicle to get started',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
         ],
       ),
     );
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
-  Widget _buildError(String message, VoidCallback onRetry) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.wifi_off_rounded, size: 52, color: Colors.grey.shade300),
-            const SizedBox(height: 14),
-            Text(message,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                    fontSize: 13, color: Color(0xFF5A7090))),
-            const SizedBox(height: 18),
-            ElevatedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Retry'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1565C0),
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
-              ),
+  Widget _buildShimmerList() {
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      itemCount: 3,
+      itemBuilder: (_, __) => Padding(
+        padding: const EdgeInsets.only(bottom: 16),
+        child: Shimmer.fromColors(
+          baseColor: Colors.grey[300]!,
+          highlightColor: Colors.grey[100]!,
+          child: Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
             ),
-          ],
+          ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteDialog(BuildContext context, VehicleModel vehicle) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Delete Vehicle'),
+        content: Text('Are you sure you want to delete ${vehicle.vehicleName}?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () {
+              context.read<VehicleProvider>().deleteVehicle(vehicle.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Delete', style: TextStyle(color: AppColors.error)),
+          ),
+        ],
       ),
     );
   }
 }
 
-// ── Vehicle Card ──────────────────────────────────────────────────────────────
 class _VehicleCard extends StatelessWidget {
   final VehicleModel vehicle;
+  final bool isFeatured;
   final VoidCallback onDelete;
 
-  const _VehicleCard({required this.vehicle, required this.onDelete});
+  const _VehicleCard({
+    required this.vehicle,
+    required this.isFeatured,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final imageUrl = vehicle.vehicleImage.isNotEmpty
-        ? 'https://wa-peke-api.demohub.tech/${vehicle.vehicleImage.first}'
-        : null;
-
     return Container(
+      margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE8EEF4), width: 1),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardBorder),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          // Vehicle image
           ClipRRect(
-            borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(14)),
-            child: imageUrl != null
-                ? Image.network(
-              imageUrl,
-              height: 110,
-              width: double.infinity,
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(12),
+              bottomLeft: Radius.circular(12),
+            ),
+            child: CachedNetworkImage(
+              imageUrl: vehicle.primaryImageUrl,
+              width: 100,
+              height: 100,
               fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _placeholder(),
-              loadingBuilder: (_, child, progress) =>
-              progress == null ? child : _placeholder(),
-            )
-                : _placeholder(),
-          ),
-
-          // Badge + delete row
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-            child: Row(
-              children: [
-                // Type badge
-                Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF5C518),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(
-                    vehicle.isTwoWheeler ? '2 Wheeler' : 'Hashbag',
-                    style: const TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF7A5A00),
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                // Delete button
-                GestureDetector(
-                  onTap: onDelete,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF5F7FA),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: const Icon(
-                      Icons.delete_outline_rounded,
-                      size: 16,
-                      color: Color(0xFF5A7090),
-                    ),
-                  ),
-                ),
-              ],
+              placeholder: (context, url) => Container(color: Colors.grey[200]),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
             ),
           ),
-
-          // Vehicle name + reg no
-          Padding(
-            padding: const EdgeInsets.fromLTRB(8, 5, 8, 10),
+          const SizedBox(width: 16),
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  vehicle.displayName,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF5A7090),
+                if (isFeatured)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    margin: const EdgeInsets.only(bottom: 4),
+                    decoration: BoxDecoration(
+                      color: AppColors.badgeYellow,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      'Featured',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Text(
+                  vehicle.vehicleName,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
-                const SizedBox(height: 2),
                 Text(
                   vehicle.regNo,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A2A3A),
-                    letterSpacing: 0.3,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.textSecondary),
+                ),
+                Text(
+                  vehicle.typeLabel,
+                  style: const TextStyle(fontSize: 12, color: AppColors.primary),
                 ),
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.delete_outline, color: AppColors.error),
+            onPressed: onDelete,
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _placeholder() {
-    return Container(
-      height: 110,
-      color: const Color(0xFFF0F4F8),
-      child: const Center(
-        child: Icon(Icons.directions_car_outlined,
-            size: 36, color: Color(0xFFB0C0D0)),
-      ),
-    );
-  }
-}
-
-// ── Shimmer placeholder card ──────────────────────────────────────────────────
-class _ShimmerCard extends StatefulWidget {
-  @override
-  State<_ShimmerCard> createState() => _ShimmerCardState();
-}
-
-class _ShimmerCardState extends State<_ShimmerCard>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _ctrl;
-  late Animation<double> _anim;
-
-  @override
-  void initState() {
-    super.initState();
-    _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000))
-      ..repeat(reverse: true);
-    _anim = Tween(begin: 0.4, end: 1.0).animate(_ctrl);
-  }
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: _anim,
-      child: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xFFF0F4F8),
-          borderRadius: BorderRadius.circular(14),
-        ),
-        child: Column(
-          children: [
-            Container(
-                height: 110,
-                decoration: const BoxDecoration(
-                  color: Color(0xFFE0E8F0),
-                  borderRadius:
-                  BorderRadius.vertical(top: Radius.circular(14)),
-                )),
-            const Padding(
-              padding: EdgeInsets.all(10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _SkeletonLine(width: 60, height: 10),
-                  SizedBox(height: 6),
-                  _SkeletonLine(width: double.infinity, height: 13),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SkeletonLine extends StatelessWidget {
-  final double width;
-  final double height;
-  const _SkeletonLine({required this.width, required this.height});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: height,
-      decoration: BoxDecoration(
-        color: const Color(0xFFD0DBE8),
-        borderRadius: BorderRadius.circular(4),
       ),
     );
   }

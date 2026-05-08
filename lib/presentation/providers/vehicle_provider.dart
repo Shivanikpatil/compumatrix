@@ -1,96 +1,97 @@
-import 'dart:convert';
-import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import '../../core/network/secure_storage.dart';
+// lib/presentation/providers/vehicle_provider.dart
+import 'dart:io';
+import 'package:flutter/material.dart';
+import '../../data/datasources/vehicle_remote_datasource.dart';
 import '../../data/models/vehicle_model.dart';
 
-enum VehicleStatus { idle, loading, success, error }
-
 class VehicleProvider extends ChangeNotifier {
-  List<VehicleModel> _vehicles = [];
-  VehicleStatus _status = VehicleStatus.idle;
-  String _errorMessage = '';
+  final VehicleRemoteDataSource _dataSource = VehicleRemoteDataSource();
 
-  List<VehicleModel> get vehicles => _vehicles;
-  VehicleStatus get status => _status;
-  String get errorMessage => _errorMessage;
+  List<VehicleModel> vehicles = [];
+  bool isLoading = false;
+  String? errorMessage;
 
-  static const String _baseUrl =
-      'https://wa-peke-api.demohub.tech/api/v1/consumer-auth/';
+  // Add vehicle form state
+  String? selectedVehicleType;  // "two_wheeler" or "four_wheeler"
+  File? selectedImage;
+  String vehicleName = '';
+  String regNo = '';
 
-  Future<void> fetchVehicles() async {
-    _status = VehicleStatus.loading;
-    _errorMessage = '';
+  Future<void> loadVehicles() async {
+    isLoading = true;
+    errorMessage = null;
     notifyListeners();
-
-    // final token = await SecureStorageService.getToken();
-    // if (token == null || token.isEmpty) {
-    //   _errorMessage = 'Session expired. Please login again.';
-    //   _status = VehicleStatus.error;
-    //   notifyListeners();
-    //   return;
-    // }
-
     try {
-      final response = await http
-          .get(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5ZjBhZThkYjU3NDlhYWRlODUxOTQyOCIsInJvbGUiOiJjb25zdW1lciIsImZ1bGxfbmFtZSI6IlNvaGFtIiwibW9iaWxlIjoiODg1NTIyMzMiLCJpc19hY3RpdmUiOnRydWUsImlhdCI6MTc3ODE3Njk1NSwiZXhwIjoxNzc4MjYzMzU1fQ.7W-vVSfi6wzXjnzIEsi8sZkmPbBM9HvQecclm4kY0ao',
-          // 'Authorization': 'Bearer $token',
-        },
-      )
-          .timeout(const Duration(seconds: 15));
-      debugPrint('STATUS: ${response.statusCode} | URL: $_baseUrl | BODY: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> body =
-        json.decode(response.body) as Map<String, dynamic>;
-
-        final rawData = body['data'];
-        final List<dynamic> data =
-        (rawData is List) ? rawData : [];
-
-        _vehicles = data
-            .whereType<Map<String, dynamic>>()
-            .map((e) => VehicleModel.fromJson(e))
-            .toList();
-
-        _status = VehicleStatus.success;
-      } else {
-        _errorMessage = 'Failed to fetch vehicles (HTTP ${response.statusCode})';
-        _status = VehicleStatus.error;
-        print(_errorMessage);
-      }
+      vehicles = await _dataSource.getVehicles();
     } catch (e) {
-      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-      _status = VehicleStatus.error;
+      errorMessage = 'Failed to load vehicles. Please try again.';
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
+  }
 
+  Future<bool> addVehicle() async {
+    if (selectedVehicleType == null || selectedImage == null || regNo.isEmpty) {
+      errorMessage = 'Please fill all required fields and add an image.';
+      notifyListeners();
+      return false;
+    }
+    isLoading = true;
     notifyListeners();
+    try {
+      await _dataSource.addVehicle(
+        vehicleName: vehicleName,
+        regNo: regNo,
+        vehicleType: selectedVehicleType!,
+        imageFile: selectedImage!,
+      );
+      await loadVehicles();
+      _resetForm();
+      return true;
+    } catch (e) {
+      errorMessage = 'Failed to add vehicle. Please try again.';
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> deleteVehicle(String vehicleId) async {
-    final token = await SecureStorageService.getToken();
-    if (token == null || token.isEmpty) return;
-
     try {
-      final response = await http
-          .delete(
-        Uri.parse(
-            'https://wa-peke-api.demohub.tech/api/v1/consumer-auth/saved-vehicles/$vehicleId'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      )
-          .timeout(const Duration(seconds: 15));
+      await _dataSource.deleteVehicle(vehicleId);
+      vehicles.removeWhere((v) => v.id == vehicleId);
+      notifyListeners();
+    } catch (e) {
+      errorMessage = 'Failed to delete vehicle.';
+      notifyListeners();
+    }
+  }
 
-      if (response.statusCode == 200) {
-        _vehicles.removeWhere((v) => v.id == vehicleId);
-        notifyListeners();
-      }
-    } catch (_) {}
+  void setVehicleType(String type) {
+    selectedVehicleType = type;
+    notifyListeners();
+  }
+
+  void setImage(File image) {
+    selectedImage = image;
+    notifyListeners();
+  }
+
+  void setVehicleName(String name) {
+    vehicleName = name;
+    notifyListeners();
+  }
+
+  void setRegNo(String reg) {
+    regNo = reg;
+    notifyListeners();
+  }
+
+  void _resetForm() {
+    selectedVehicleType = null;
+    selectedImage = null;
+    vehicleName = '';
+    regNo = '';
   }
 }
