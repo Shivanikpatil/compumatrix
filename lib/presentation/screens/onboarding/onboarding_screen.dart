@@ -15,40 +15,34 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _currentPage = 0;
 
   // ─── PRIMARY BRAND COLORS ────────────────────────────────────────────────
-  static const Color kBlue   = Color(0xFF0055FF);
+  static const Color kBlue = Color(0xFF0055FF);
   static const Color kYellow = Color(0xFFFFD600);
 
   // ─── ONBOARDING DATA ─────────────────────────────────────────────────────
-  // Replace imagePath values with your actual asset paths, e.g.
-  //   'assets/images/onboarding_1.png'
   final List<OnboardingData> _pages = [
     OnboardingData(
       highlightedTitle: 'Professional',
       restTitle: '\nCleaning, Simplified',
       description:
-      'Book vehicle and professional cleaning services managed end-to-end '
-          'by a verified system — no guesswork, no compromises.',
-      imagePath: Assets.images.img1.path, // 🔁 replace with your image
+      'Book vehicle and professional cleaning services managed end-to-end by a verified system — no guesswork, no compromises.',
+      imagePath: Assets.images.img1.path,
     ),
     OnboardingData(
       highlightedTitle: 'Live Tracking',
       restTitle: ' &\nTransparency',
       description:
-      'From booking to completion, track your service in real time and '
-          'view verified before-and-after proof.',
-      imagePath: Assets.images.img2.path, // 🔁 replace with your image
+      'From booking to completion, track your service in real time and view verified before-and-after proof.',
+      imagePath: Assets.images.img2.path,
     ),
     OnboardingData(
       highlightedTitle: 'Quality',
       restTitle: ' You Can Trust\nand Validate',
       description:
-      'Every job is assigned, monitored, and validated by an admin-controlled '
-          'system to ensure quality and reliable service.',
-      imagePath: Assets.images.img1.path, // 🔁 replace with your image
+      'Every job is assigned, monitored, and validated by an admin-controlled system to ensure quality and reliable service.',
+      imagePath: Assets.images.img4.path,
     ),
   ];
 
-  // ─── BUILD ────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -139,20 +133,27 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ─── SINGLE PAGE ──────────────────────────────────────────────────────────
   Widget _buildPage(OnboardingData data) {
+    // Dynamic Clipper Selection
+    CustomClipper<Path> selectedClipper;
+    if (_currentPage == 0) {
+      selectedClipper = _BlobClipper1();
+    } else if (_currentPage == 1) {
+      selectedClipper = _BlobClipper2();
+    } else {
+      selectedClipper = _BlobClipper3();
+    }
+
     return Column(
       children: [
-        // ── Top illustration area (blue with blob bottom)
         Expanded(
           flex: 58,
           child: ClipPath(
-            clipper: _BlobClipper(),
+            clipper: selectedClipper,
             child: Container(
               width: double.infinity,
               color: kBlue,
               child: Padding(
-                // Push image away from the status bar
                 padding: EdgeInsets.only(
                   top: MediaQuery.of(context).padding.top + 60,
                   bottom: 40,
@@ -162,8 +163,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
           ),
         ),
-
-        // ── Bottom text area
         Expanded(
           flex: 42,
           child: Padding(
@@ -172,8 +171,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 28),
-
-                // Mixed-colour title
                 RichText(
                   text: TextSpan(
                     style: const TextStyle(
@@ -193,10 +190,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 14),
-
-                // Description
                 Text(
                   data.description,
                   style: TextStyle(
@@ -205,8 +199,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     height: 1.6,
                   ),
                 ),
-
-                // Spacer so button sits at bottom
                 const Spacer(),
               ],
             ),
@@ -216,7 +208,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ─── INDICATOR DOT ────────────────────────────────────────────────────────
   Widget _buildDot(int index) {
     final bool isActive = index == _currentPage;
     return AnimatedContainer(
@@ -232,7 +223,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     );
   }
 
-  // ─── NAVIGATION ───────────────────────────────────────────────────────────
   Future<void> _completeOnboarding() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isFirstTime', false);
@@ -245,49 +235,76 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-// ─── BLOB CLIPPER ─────────────────────────────────────────────────────────────
-// Creates the organic curved bottom edge on the blue illustration area.
-class _BlobClipper extends CustomClipper<Path> {
+// ─── CLIPPERS ────────────────────────────────────────────────────────────────
+
+// Screen 1: Symmetrical "Smile" Curve
+class _BlobClipper1 extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {
     final path = Path();
-    path.lineTo(0, size.height - 60);
-
-    // Left curve dipping down then rising
+    path.lineTo(0, size.height - 80);
     path.quadraticBezierTo(
-      size.width * 0.15,
-      size.height + 20,
-      size.width * 0.5,
-      size.height - 20,
-    );
-
-    // Right curve rising back up
-    path.quadraticBezierTo(
-      size.width * 0.85,
-      size.height - 70,
+      size.width / 2,
+      size.height + 60,
       size.width,
-      size.height - 10,
+      size.height - 80,
     );
-
     path.lineTo(size.width, 0);
     path.close();
     return path;
   }
-
   @override
-  bool shouldReclip(_BlobClipper _) => false;
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
 }
 
-// ─── ILLUSTRATION WIDGET ──────────────────────────────────────────────────────
-// Shows your asset image; falls back to a placeholder icon while not yet set.
+// Screen 2: Left-weighted "Blob"
+class _BlobClipper2 extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height * 0.9);
+    path.quadraticBezierTo(
+      size.width * 0.6,
+      size.height * 1.1,
+      size.width * 0.9,
+      size.height * 0.3,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+// Screen 3: Right-weighted "Blob"
+class _BlobClipper3 extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.lineTo(0, size.height * 0.35);
+    path.quadraticBezierTo(
+      size.width * 0.6,
+      size.height * 1.1,
+      size.width,
+      size.height * 0.8,
+    );
+    path.lineTo(size.width, 0);
+    path.close();
+    return path;
+  }
+  @override
+  bool shouldReclip(CustomClipper<Path> oldClipper) => true;
+}
+
+// ─── SUPPORTING WIDGETS ──────────────────────────────────────────────────────
+
 class _OnboardingImage extends StatelessWidget {
   const _OnboardingImage({required this.path});
   final String path;
 
   @override
   Widget build(BuildContext context) {
-    // Once you've added real assets, replace the body with just:
-    //   return Image.asset(path, fit: BoxFit.contain);
     return Image.asset(
       path,
       fit: BoxFit.contain,
@@ -296,45 +313,29 @@ class _OnboardingImage extends StatelessWidget {
   }
 }
 
-// Placeholder shown when the image asset isn't found yet.
 class _PlaceholderIllustration extends StatelessWidget {
   const _PlaceholderIllustration();
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 160,
-          height: 160,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.local_car_wash_rounded,
-            size: 90,
-            color: Colors.white,
-          ),
+    return Center(
+      child: Container(
+        width: 160,
+        height: 160,
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.15),
+          shape: BoxShape.circle,
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Add your illustration here',
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.6),
-            fontSize: 12,
-          ),
-        ),
-      ],
+        child: const Icon(Icons.image, size: 80, color: Colors.white),
+      ),
     );
   }
 }
 
 // ─── DATA MODEL ───────────────────────────────────────────────────────────────
 class OnboardingData {
-  final String highlightedTitle; // shown in blue
-  final String restTitle;        // shown in black (include \n if needed)
+  final String highlightedTitle;
+  final String restTitle;
   final String description;
   final String imagePath;
 
