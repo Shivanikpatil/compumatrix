@@ -1,7 +1,6 @@
 // lib/presentation/screens/splash/splash_screen.dart
-import 'package:compumatrix/generated/assets.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+import '../../../core/import_file.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});

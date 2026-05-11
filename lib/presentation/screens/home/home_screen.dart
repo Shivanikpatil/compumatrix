@@ -1,10 +1,8 @@
 // lib/presentation/screens/home/home_screen.dart
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import '../../../core/constants/app_colors.dart';
-import '../../providers/service_provider.dart';
+
+import '../../../core/import_file.dart';
 import '../../providers/home_provider.dart';
+import '../../providers/service_provider.dart';
 import '../profile/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {

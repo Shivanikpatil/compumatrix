@@ -12,7 +12,6 @@ class Assets {
 class $AssetsImagesGen {
   const $AssetsImagesGen();
 
-  final AssetGenImage bike = const AssetGenImage('assets/images/bike.png');
   final AssetGenImage image3 = const AssetGenImage('assets/images/image_3.png');
   final AssetGenImage img = const AssetGenImage('assets/images/img.png');
   final AssetGenImage img4 = const AssetGenImage('assets/images/img4.png');
@@ -25,6 +24,7 @@ class AssetGenImage {
   const AssetGenImage(this._assetName, {this.size, this.flavors = const {}});
 
   final String _assetName;
+
 
   final Size? size;
   final Set<String> flavors;
@@ -82,8 +82,15 @@ class AssetGenImage {
     );
   }
 
-  ImageProvider provider({AssetBundle? bundle, String? package}) {
-    return AssetImage(_assetName, bundle: bundle, package: package);
+  ImageProvider provider({
+    AssetBundle? bundle,
+    String? package,
+  }) {
+    return AssetImage(
+      _assetName,
+      bundle: bundle,
+      package: package,
+    );
   }
 
   Widget custom({
@@ -100,3 +107,4 @@ class AssetGenImage {
 
   String get keyName => _assetName;
 }
+

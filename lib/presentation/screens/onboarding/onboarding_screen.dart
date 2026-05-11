@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../generated/assets.dart';
+
+import '../../../core/import_file.dart';
 import '../auth/login_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
